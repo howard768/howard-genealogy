@@ -32,15 +32,40 @@ function scoreSurname(individual, candidate) {
 }
 
 function extractCandidateSurname(fullName) {
-  if (!fullName) return '';
-  const tokens = String(fullName).trim().split(/\s+/);
+  const cleaned = cleanCandidateName(fullName);
+  if (!cleaned) return '';
+  const tokens = cleaned.trim().split(/\s+/);
   return tokens[tokens.length - 1] || '';
 }
 
 function extractCandidateGiven(fullName) {
-  if (!fullName) return '';
-  const tokens = String(fullName).trim().split(/\s+/);
+  const cleaned = cleanCandidateName(fullName);
+  if (!cleaned) return '';
+  const tokens = cleaned.trim().split(/\s+/);
   return tokens.slice(0, -1).join(' ');
+}
+
+// Trim trailing date/place text off a candidate's name string. FAG search
+// cards bundle "Fred C Howard 1922-1984 Pinellas County..." into one text
+// blob, and a naive split-on-whitespace gives "County" as the surname.
+// Stop at the first token that's a year, a month-then-digit pair, or ends
+// in a comma (place fragments).
+const MONTH_RE = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?$/i;
+function cleanCandidateName(fullName) {
+  if (!fullName) return '';
+  const tokens = String(fullName).split(/\s+/).filter(Boolean);
+  const kept = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (/^\d{3,4}/.test(t)) break;
+    if (MONTH_RE.test(t) && i + 1 < tokens.length && /^\d/.test(tokens[i + 1])) break;
+    if (t.endsWith(',')) {
+      kept.push(t.slice(0, -1));
+      break;
+    }
+    kept.push(t);
+  }
+  return kept.join(' ').trim();
 }
 
 function scoreGiven(individual, candidate) {
@@ -235,4 +260,4 @@ if (require.main === module) {
   console.log(JSON.stringify(pickBest(individual, candidates), null, 2));
 }
 
-module.exports = { scoreCandidate, pickBest };
+module.exports = { scoreCandidate, pickBest, cleanCandidateName };

@@ -3,6 +3,7 @@
 //   node sweep.js <gedcom-path>
 //     [--cache out/cache.jsonl] [--report out/report.md]
 //     [--only <xref>] [--re-search-ambiguous] [--re-search-all]
+//     [--rescore]   re-run pickBest against existing cache; no network.
 //     [--hydrate] [--delay-ms 4000] [--jitter-ms 2000]
 //     [--max-candidates 20] [--limit N]
 //
@@ -240,6 +241,26 @@ function renderReport(cacheMap) {
 
 // ---- Main ------------------------------------------------------------------
 
+function rescoreFromCache(cacheMap, individuals) {
+  const byXref = new Map(individuals.map((i) => [i.xref, i]));
+  const counts = { changed: 0, byStatus: { resolved: 0, ambiguous: 0, no_match: 0, error: 0 } };
+  for (const row of cacheMap.values()) {
+    const ind = byXref.get(row.xref);
+    if (!ind || !row.candidates) continue;
+    const prev = row.status;
+    const decision = pickBest(ind, row.candidates);
+    row.status = decision.status;
+    row.memorialId = decision.memorialId || null;
+    row.score = decision.score || null;
+    row.gap = decision.gap || null;
+    row.reasons = decision.reasons || [];
+    if (decision.candidates && decision.candidates.length) row.candidates = decision.candidates;
+    if (prev !== row.status) counts.changed++;
+    counts.byStatus[row.status] = (counts.byStatus[row.status] || 0) + 1;
+  }
+  return counts;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const gedcomPath = args._[0];
@@ -259,6 +280,21 @@ async function main() {
 
   const individuals = loadIndividuals(gedcomPath);
   const cacheMap = loadCache(cachePath);
+
+  if (args.rescore) {
+    const counts = rescoreFromCache(cacheMap, individuals);
+    rewriteCache(cachePath, cacheMap);
+    fs.writeFileSync(reportPath, renderReport(cacheMap));
+    console.error(
+      `Rescored ${cacheMap.size} rows. ${counts.changed} status changes. ` +
+        `resolved=${counts.byStatus.resolved || 0} ` +
+        `ambiguous=${counts.byStatus.ambiguous || 0} ` +
+        `no_match=${counts.byStatus.no_match || 0} ` +
+        `error=${counts.byStatus.error || 0}`
+    );
+    console.error(`Report written to ${reportPath}`);
+    return;
+  }
 
   const browser = await launchBrowser();
   try {

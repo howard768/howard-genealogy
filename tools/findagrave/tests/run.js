@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { pickBest } = require('../match');
+const { pickBest, cleanCandidateName } = require('../match');
 const { extractYear, normalizePlace } = require('../lib/gedcom');
 const { equivalent } = require('../lib/nicknames');
 const { levenshtein, normalizeForCompare } = require('../lib/strings');
@@ -58,6 +58,13 @@ const p2 = normalizePlace('Glasgow, Scotland');
 assertEq('place region direct', p2.region, 'Scotland');
 assertEq('place country direct', p2.country, 'UK');
 
+console.log('\nmatch.js — cleanCandidateName (FAG search blob bug)');
+assertEq('strip year suffix', cleanCandidateName('Fred C Howard 1922-1984'), 'Fred C Howard');
+assertEq('strip month+year', cleanCandidateName('David French Smith Apr 1848-1915'), 'David French Smith');
+assertEq('strip trailing place after comma', cleanCandidateName('Hugh Wilson, Brooklyn, NY'), 'Hugh Wilson');
+assertEq('keep May as name when no digit follows', cleanCandidateName('Mary May Smith'), 'Mary May Smith');
+assertEq('plain name unchanged', cleanCandidateName('Mary Elizabeth Wilson'), 'Mary Elizabeth Wilson');
+
 console.log('\nmatch.js — Hugh Wilson regression');
 {
   const ind = load('hugh-wilson.json');
@@ -65,6 +72,15 @@ console.log('\nmatch.js — Hugh Wilson regression');
   const decision = pickBest(ind, cands);
   assertEq('Hugh Wilson resolved', decision.status, 'resolved');
   assertEq('Hugh Wilson memorial id', decision.memorialId, '194480890');
+}
+
+console.log('\nmatch.js — Hugh Wilson regression with blobby FAG names');
+{
+  const ind = load('hugh-wilson.json');
+  const cands = load('wilson-candidates-blobby.json');
+  const decision = pickBest(ind, cands);
+  assertEq('Hugh Wilson resolved despite blob', decision.status, 'resolved');
+  assertEq('Hugh Wilson memorial id from blob', decision.memorialId, '194480890');
 }
 
 console.log('\nmatch.js — Mary Elizabeth Greene Wilson (maiden surnameAlt)');
