@@ -1,0 +1,15 @@
+{
+  "name": "cli-web-findagrave",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Headless Chromium fetcher for Find a Grave memorial pages.",
+  "bin": {
+    "findagrave-fetch": "fetch.js"
+  },
+  "scripts": {
+    "fetch": "node fetch.js"
+  },
+  "dependencies": {
+    "playwright": "~1.55.0"
+  }
+}
