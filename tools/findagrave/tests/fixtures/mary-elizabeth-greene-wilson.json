@@ -1,0 +1,17 @@
+{
+  "xref": "@I0043@",
+  "given": "Mary Elizabeth",
+  "surname": "Greene",
+  "surnameAlt": ["Wilson"],
+  "sex": "F",
+  "birth": {
+    "year": 1858,
+    "dateRaw": "ABT 1858",
+    "place": { "city": "County Londonderry", "region": "Northern Ireland", "country": "UK", "raw": "County Londonderry, Northern Ireland" }
+  },
+  "death": {
+    "year": 1933,
+    "dateRaw": "30 JAN 1933",
+    "place": { "city": "Queens", "region": "New York", "country": "USA", "raw": "Queens, New York, USA" }
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "194481027",
+    "name": "Mary Elizabeth Wilson",
+    "birthYear": 1858,
+    "deathYear": 1933,
+    "cemetery": "The Evergreens Cemetery",
+    "cemeteryLocation": "Brooklyn, Kings County, New York, USA",
+    "snippetText": "Mary Elizabeth Wilson 1858–1933 The Evergreens Cemetery Brooklyn New York"
+  },
+  {
+    "id": "33333333",
+    "name": "Mary Wilson",
+    "birthYear": 1820,
+    "deathYear": 1890,
+    "cemetery": "St Mary's",
+    "cemeteryLocation": "Boston, Massachusetts, USA",
+    "snippetText": "Mary Wilson 1820–1890 St Mary's Boston Massachusetts"
+  }
+]

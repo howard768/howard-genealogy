@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+// Offline regression suite. Loads fixture JSONs that simulate Find a Grave
+// search results and asserts the matcher picks the correct memorial id.
+// No network. Run with: npm test  or  node tests/run.js
+
+const fs = require('fs');
+const path = require('path');
+const { pickBest } = require('../match');
+const { extractYear, normalizePlace } = require('../lib/gedcom');
+const { equivalent } = require('../lib/nicknames');
+const { levenshtein, normalizeForCompare } = require('../lib/strings');
+
+const FIXTURES = path.join(__dirname, 'fixtures');
+let pass = 0;
+let fail = 0;
+
+function load(name) {
+  return JSON.parse(fs.readFileSync(path.join(FIXTURES, name), 'utf8'));
+}
+
+function assertEq(label, actual, expected) {
+  const ok = JSON.stringify(actual) === JSON.stringify(expected);
+  if (ok) {
+    pass++;
+    console.log(`  ok  ${label}`);
+  } else {
+    fail++;
+    console.log(`  FAIL ${label}`);
+    console.log(`       expected: ${JSON.stringify(expected)}`);
+    console.log(`       actual:   ${JSON.stringify(actual)}`);
+  }
+}
+
+console.log('\nlib/strings');
+assertEq('normalizeForCompare diacritics', normalizeForCompare('François'), 'francois');
+assertEq('levenshtein equal', levenshtein('Wilson', 'Wilson'), 0);
+assertEq('levenshtein 1 sub', levenshtein('Wilson', 'Wilsen'), 1);
+
+console.log('\nlib/nicknames');
+assertEq('John ↔ Jack', equivalent('John', 'Jack'), true);
+assertEq('Mary ↔ Polly', equivalent('Mary', 'Polly'), true);
+assertEq('Hugh ≠ Henry', equivalent('Hugh', 'Henry'), false);
+
+console.log('\nlib/gedcom date parsing');
+assertEq('extractYear plain', extractYear('1856'), 1856);
+assertEq('extractYear ABT', extractYear('ABT 1838'), 1838);
+assertEq('extractYear BEF', extractYear('BEF 1900'), 1900);
+assertEq('extractYear full', extractYear('19 AUG 1856'), 1856);
+assertEq('extractYear BET midpoint', extractYear('BET 1830 AND 1840'), 1835);
+assertEq('extractYear null', extractYear(null), null);
+
+console.log('\nlib/gedcom place parsing');
+const p1 = normalizePlace('Brooklyn, Kings, New York, USA');
+assertEq('place city', p1.city, 'Brooklyn');
+assertEq('place region', p1.region, 'New York');
+assertEq('place country', p1.country, 'USA');
+const p2 = normalizePlace('Glasgow, Scotland');
+assertEq('place region direct', p2.region, 'Scotland');
+assertEq('place country direct', p2.country, 'UK');
+
+console.log('\nmatch.js — Hugh Wilson regression');
+{
+  const ind = load('hugh-wilson.json');
+  const cands = load('wilson-candidates.json');
+  const decision = pickBest(ind, cands);
+  assertEq('Hugh Wilson resolved', decision.status, 'resolved');
+  assertEq('Hugh Wilson memorial id', decision.memorialId, '194480890');
+}
+
+console.log('\nmatch.js — Mary Elizabeth Greene Wilson (maiden surnameAlt)');
+{
+  const ind = load('mary-elizabeth-greene-wilson.json');
+  const cands = load('mary-greene-candidates.json');
+  const decision = pickBest(ind, cands);
+  assertEq('Mary Greene resolved via surnameAlt', decision.status, 'resolved');
+  assertEq('Mary Greene memorial id', decision.memorialId, '194481027');
+}
+
+console.log('\nmatch.js — Mary J. Pilkington (initial collapse + maiden)');
+{
+  const ind = load('mary-pilkington.json');
+  const cands = load('mary-pilkington-candidates.json');
+  const decision = pickBest(ind, cands);
+  assertEq('Mary J. Pilkington resolved', decision.status, 'resolved');
+  assertEq('Mary J. Pilkington memorial id', decision.memorialId, '195054679');
+}
+
+console.log('\nmatch.js — empty candidates');
+{
+  const ind = load('hugh-wilson.json');
+  const decision = pickBest(ind, []);
+  assertEq('empty → no_match', decision.status, 'no_match');
+}
+
+console.log(`\n${pass} passed, ${fail} failed`);
+if (fail) process.exit(1);

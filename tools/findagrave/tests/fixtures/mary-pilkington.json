@@ -1,0 +1,17 @@
+{
+  "xref": "@I0044@",
+  "given": "Mary J.",
+  "surname": "Wilson",
+  "surnameAlt": ["Pilkington"],
+  "sex": "F",
+  "birth": {
+    "year": 1887,
+    "dateRaw": "24 MAR 1887",
+    "place": { "city": null, "region": "Scotland", "country": "UK", "raw": "Scotland" }
+  },
+  "death": {
+    "year": 1909,
+    "dateRaw": "31 MAR 1909",
+    "place": { "city": "Brooklyn", "region": "New York", "country": "USA", "raw": "Brooklyn, Kings, New York, USA" }
+  }
+}

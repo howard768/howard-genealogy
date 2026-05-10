@@ -1,0 +1,17 @@
+{
+  "xref": "@I0042@",
+  "given": "Hugh",
+  "surname": "Wilson",
+  "surnameAlt": [],
+  "sex": "M",
+  "birth": {
+    "year": 1856,
+    "dateRaw": "19 AUG 1856",
+    "place": { "city": "Glasgow", "region": "Scotland", "country": "UK", "raw": "Glasgow, Scotland" }
+  },
+  "death": {
+    "year": 1906,
+    "dateRaw": "3 NOV 1906",
+    "place": { "city": "Brooklyn", "region": "New York", "country": "USA", "raw": "Brooklyn, Kings, New York, USA" }
+  }
+}
