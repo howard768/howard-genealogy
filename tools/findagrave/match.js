@@ -48,17 +48,28 @@ function extractCandidateGiven(fullName) {
 // Trim trailing date/place text off a candidate's name string. FAG search
 // cards bundle "Fred C Howard 1922-1984 Pinellas County..." into one text
 // blob, and a naive split-on-whitespace gives "County" as the surname.
-// Stop at the first token that's a year, a month-then-digit pair, or ends
-// in a comma (place fragments).
+// Cuts in this order: (1) badge keyword anywhere (Veteran / VVeteran /
+// Famous / Memorial / Cenotaph — `V?` handles the icon-text concatenation
+// FAG renders as "VVeteran", and the lack of a leading `\b` means
+// "HowardVeteran" cuts cleanly to "Howard"); (2) any 4-digit year; (3)
+// per-token walk for day-number, month-then-digit, and comma stops.
 const MONTH_RE = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?$/i;
+const BADGE_RE = /(V?Veteran|Famous|Memorial|Cenotaph)\b/i;
 function cleanCandidateName(fullName) {
   if (!fullName) return '';
-  const tokens = String(fullName).split(/\s+/).filter(Boolean);
+  let s = String(fullName);
+  const badge = s.match(BADGE_RE);
+  if (badge) s = s.slice(0, badge.index);
+  const yearAt = s.match(/\b\d{4}\b/);
+  if (yearAt) s = s.slice(0, yearAt.index);
+  const tokens = s.split(/\s+/).filter(Boolean);
   const kept = [];
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
-    if (/^\d{3,4}/.test(t)) break;
-    if (MONTH_RE.test(t) && i + 1 < tokens.length && /^\d/.test(tokens[i + 1])) break;
+    if (/^\d+$/.test(t)) break;
+    // Month token: stop if followed by a digit OR if it's the last token
+    // (year was already cut, so a trailing month is leftover date prefix).
+    if (MONTH_RE.test(t) && (i + 1 >= tokens.length || /^\d/.test(tokens[i + 1]))) break;
     if (t.endsWith(',')) {
       kept.push(t.slice(0, -1));
       break;

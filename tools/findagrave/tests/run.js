@@ -64,6 +64,26 @@ assertEq('strip month+year', cleanCandidateName('David French Smith Apr 1848-191
 assertEq('strip trailing place after comma', cleanCandidateName('Hugh Wilson, Brooklyn, NY'), 'Hugh Wilson');
 assertEq('keep May as name when no digit follows', cleanCandidateName('Mary May Smith'), 'Mary May Smith');
 assertEq('plain name unchanged', cleanCandidateName('Mary Elizabeth Wilson'), 'Mary Elizabeth Wilson');
+assertEq(
+  'strip Veteran badge with day-number date',
+  cleanCandidateName('Harold William "Bill" Compston VVeteran 8 Jan 1930 – 18 Sep 2000'),
+  'Harold William "Bill" Compston'
+);
+assertEq(
+  'strip concatenated Veteran badge',
+  cleanCandidateName('Fred C HowardVeteran 1922-1984'),
+  'Fred C Howard'
+);
+assertEq(
+  'strip Famous badge',
+  cleanCandidateName('Babe Ruth Famous 1895 – 1948'),
+  'Babe Ruth'
+);
+assertEq(
+  'pure single-digit day number stops parser',
+  cleanCandidateName('John Smith 8 Jan 1900'),
+  'John Smith'
+);
 
 console.log('\nsearch.js — year extraction (full-date header bug)');
 {
@@ -110,6 +130,15 @@ console.log('\nmatch.js — Hugh Wilson regression');
   const decision = pickBest(ind, cands);
   assertEq('Hugh Wilson resolved', decision.status, 'resolved');
   assertEq('Hugh Wilson memorial id', decision.memorialId, '194480890');
+}
+
+console.log('\nmatch.js — Bill Compston end-to-end (badge + day-number bug)');
+{
+  const ind = load('bill-compston.json');
+  const cands = load('bill-compston-candidates.json');
+  const decision = pickBest(ind, cands);
+  assertEq('Bill Compston resolved', decision.status, 'resolved');
+  assertEq('Bill Compston memorial id', decision.memorialId, '54782399');
 }
 
 console.log('\nmatch.js — Hugh Wilson regression with blobby FAG names');
