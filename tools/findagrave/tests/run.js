@@ -189,6 +189,30 @@ console.log('\nmatch.js — Fred Charles Howard (perfect-signal bypass)');
   assertEq('Fred memorial id', decision.memorialId, '254069216');
 }
 
+console.log('\nmatch.js — Stephanie Rendon (living person vs deceased namesake)');
+{
+  // Born 1988, no death in GEDCOM. The only candidate has a death year of
+  // 1996 (a deceased 8-year-old). Without the living-mismatch gate, this
+  // resolved because death-missing scored as neutral. With the gate, it
+  // must stay ambiguous (or no_match) so a human catches it.
+  const ind = load('stephanie-rendon.json');
+  const cands = [
+    {
+      id: '244995686',
+      name: 'Stephanie Rendon 23 Dec 1987 – 12 Dec 1996',
+      birthYear: 1987,
+      deathYear: 1996,
+      cemetery: null,
+      cemeteryLocation: 'Miami, Miami-Dade, Florida, USA',
+      snippetText: 'Stephanie Rendon 1987 1996 Miami Florida',
+    },
+  ];
+  const decision = pickBest(ind, cands);
+  // The candidate is still surfaced (ambiguous), but the resolve gate
+  // must block it from being committed.
+  assertEq('Stephanie does not auto-resolve', decision.status === 'resolved', false);
+}
+
 console.log('\nmatch.js — William Melvin vs William H (middle-name false positive)');
 {
   // Without the middle-name guard, this candidate would bypass-resolve:

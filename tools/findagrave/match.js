@@ -306,8 +306,22 @@ function pickBest(individual, candidates) {
   // covers the normal resolve path too.
   const topMiddleOk = middleNameCompatible(individual, top.candidate);
 
+  // Likely-living gate: the GEDCOM has no death year, the individual was
+  // born recently enough to plausibly still be alive, and the candidate
+  // memorial has a death year. Strong signal these are different people
+  // — pairing a living person with a deceased namesake is the worst kind
+  // of false positive (e.g., Stephanie Marie Rendon b.1988 in tree
+  // matched to a deceased 8-year-old's memorial). Block auto-resolve.
+  const CURRENT_YEAR = new Date().getFullYear();
+  const LIVING_WINDOW_YEARS = 105;
+  const likelyLiving =
+    indDeathYear == null &&
+    indBirthYear != null &&
+    indBirthYear >= CURRENT_YEAR - LIVING_WINDOW_YEARS;
+  const livingMismatch = likelyLiving && top.candidate.deathYear != null;
+
   let resolved = false;
-  if (!topMiddleOk) {
+  if (!topMiddleOk || livingMismatch) {
     resolved = false;
   } else if (hasNoYears) {
     resolved = top.score >= 90 && fullSurname && gap >= 20;
