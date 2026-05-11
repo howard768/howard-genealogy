@@ -1,0 +1,17 @@
+{
+  "xref": "@I262664547315@",
+  "given": "Harold William",
+  "surname": "Compston",
+  "surnameAlt": [],
+  "sex": "M",
+  "birth": {
+    "year": 1930,
+    "dateRaw": "8 Jan 1930",
+    "place": { "city": "Wellston", "region": "Ohio", "country": "USA", "raw": "Wellston, Jackson, Ohio, USA" }
+  },
+  "death": {
+    "year": 2000,
+    "dateRaw": "18 Sep 2000",
+    "place": { "city": "Marysville", "region": "Ohio", "country": "USA", "raw": "Marysville, Union County, Ohio, United States of America" }
+  }
+}

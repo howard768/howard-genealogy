@@ -1,15 +1,22 @@
 {
   "name": "cli-web-findagrave",
   "private": true,
-  "version": "0.1.0",
-  "description": "Headless Chromium fetcher for Find a Grave memorial pages.",
+  "version": "0.2.0",
+  "description": "Headless Chromium fetcher and GEDCOM-driven sweep for Find a Grave memorials.",
   "bin": {
-    "findagrave-fetch": "fetch.js"
+    "findagrave-fetch": "fetch.js",
+    "findagrave-search": "search.js",
+    "findagrave-sweep": "sweep.js"
   },
   "scripts": {
-    "fetch": "node fetch.js"
+    "fetch": "node fetch.js",
+    "search": "node search.js",
+    "sweep": "node sweep.js",
+    "match": "node match.js",
+    "test": "node tests/run.js"
   },
   "dependencies": {
-    "playwright": "~1.55.0"
+    "playwright": "~1.55.0",
+    "read-gedcom": "^0.3.2"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "xref": "@I262664548418@",
+  "given": "Stephanie Marie",
+  "surname": "Rendon",
+  "surnameAlt": [],
+  "sex": "F",
+  "birth": {
+    "year": 1988,
+    "dateRaw": "1988",
+    "place": { "city": "Miami", "region": "Florida", "country": "USA", "raw": "Miami, Miami-Dade, Florida, USA" }
+  },
+  "death": {
+    "year": null,
+    "dateRaw": null,
+    "place": null
+  }
+}

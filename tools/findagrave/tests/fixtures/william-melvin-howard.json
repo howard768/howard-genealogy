@@ -1,0 +1,17 @@
+{
+  "xref": "@I0042@",
+  "given": "William Melvin",
+  "surname": "Howard",
+  "surnameAlt": [],
+  "sex": "M",
+  "birth": {
+    "year": 1927,
+    "dateRaw": "1927",
+    "place": { "city": "Bowling Green", "region": "Ohio", "country": "USA", "raw": "Bowling Green, Wood, Ohio, USA" }
+  },
+  "death": {
+    "year": 1995,
+    "dateRaw": "1995",
+    "place": { "city": "Bowling Green", "region": "Ohio", "country": "USA", "raw": "Bowling Green, Wood, Ohio, USA" }
+  }
+}

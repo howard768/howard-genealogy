@@ -1,0 +1,20 @@
+[
+  {
+    "id": "195054679",
+    "name": "Mary Jane Pilkington",
+    "birthYear": 1887,
+    "deathYear": 1909,
+    "cemetery": "The Evergreens Cemetery",
+    "cemeteryLocation": "Brooklyn, Kings County, New York, USA",
+    "snippetText": "Mary Jane Pilkington 1887–1909 The Evergreens Cemetery Brooklyn New York"
+  },
+  {
+    "id": "44444444",
+    "name": "Mary Pilkington",
+    "birthYear": 1880,
+    "deathYear": 1955,
+    "cemetery": "Calvary",
+    "cemeteryLocation": "Queens, New York, USA",
+    "snippetText": "Mary Pilkington 1880–1955 Calvary Queens"
+  }
+]
