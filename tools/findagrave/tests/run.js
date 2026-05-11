@@ -65,6 +65,44 @@ assertEq('strip trailing place after comma', cleanCandidateName('Hugh Wilson, Br
 assertEq('keep May as name when no digit follows', cleanCandidateName('Mary May Smith'), 'Mary May Smith');
 assertEq('plain name unchanged', cleanCandidateName('Mary Elizabeth Wilson'), 'Mary Elizabeth Wilson');
 
+console.log('\nsearch.js — year extraction (full-date header bug)');
+{
+  // Mirrors the regex used inside search.js page.evaluate. Asserting the
+  // pattern here so future edits to either side stay in sync.
+  function extractYears(cardText) {
+    const all = (cardText.match(/\b\d{4}\b/g) || [])
+      .map((y) => parseInt(y, 10))
+      .filter((y) => y >= 1500 && y <= 2100);
+    if (all.length >= 2 && all[0] <= all[1]) return [all[0], all[1]];
+    return [null, null];
+  }
+  assertEq(
+    'Compston full-date header',
+    extractYears('Harold William "Bill" Compston Veteran 8 Jan 1930 – 18 Sep 2000'),
+    [1930, 2000]
+  );
+  assertEq(
+    'plain year-dash-year',
+    extractYears('Hugh Wilson 1856-1906 The Evergreens Cemetery'),
+    [1856, 1906]
+  );
+  assertEq(
+    'en-dash spaced',
+    extractYears('Hugh M. Wilson 1857 – 1906 Brooklyn'),
+    [1857, 1906]
+  );
+  assertEq(
+    'ignores trailing photo-added year',
+    extractYears('Mary Greene 1858 – 1935 Photo added 2024'),
+    [1858, 1935]
+  );
+  assertEq(
+    'single year only — no guess',
+    extractYears('John Smith born 1900, still living'),
+    [null, null]
+  );
+}
+
 console.log('\nmatch.js — Hugh Wilson regression');
 {
   const ind = load('hugh-wilson.json');

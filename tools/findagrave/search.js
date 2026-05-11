@@ -93,11 +93,26 @@ async function searchMemorials(query, opts = {}) {
         seen.add(id);
 
         const cardText = norm(card.textContent || '');
-        // Year extraction from card text: birth/death dates in the form
-        // "8 Aug 1856 – 3 Nov 1906" or "1856-1906".
-        const yearPair = cardText.match(/(\d{4})\s*[–\-]\s*(\d{4})/);
-        const birthYear = yearPair ? parseInt(yearPair[1], 10) : null;
-        const deathYear = yearPair ? parseInt(yearPair[2], 10) : null;
+        // Year extraction: take the first two plausible 4-digit years
+        // (1500–2100). Tolerates all FAG date layouts:
+        //   "1856-1906", "1857 – 1906", "8 Jan 1930 – 18 Sep 2000"
+        // Earlier regex required years on either side of a dash with no
+        // intervening digits, which broke on full-date headers like Bill
+        // Compston's "8 Jan 1930 – 18 Sep 2000" (the "18 Sep" between the
+        // dash and 2000 stopped the match).
+        const allYears = (cardText.match(/\b\d{4}\b/g) || [])
+          .map((y) => parseInt(y, 10))
+          .filter((y) => y >= 1500 && y <= 2100);
+        let birthYear = null;
+        let deathYear = null;
+        if (allYears.length >= 2 && allYears[0] <= allYears[1]) {
+          birthYear = allYears[0];
+          deathYear = allYears[1];
+        } else if (allYears.length === 1) {
+          // Single year — could be birth-only (still living) or
+          // death-only (unknown birth). Don't guess; leave both null
+          // so the matcher applies the missing-data neutral score.
+        }
 
         // Name: prefer the link text if it looks like a name.
         const name = norm(link.textContent) || norm(card.querySelector('h2, h3, .name')?.textContent || '');
