@@ -101,6 +101,13 @@ function scoreGiven(individual, candidate) {
   const candFirst = givenTokens(candGivenNorm)[0] || '';
 
   if (indFirst && candFirst && indFirst === candFirst) {
+    // First token matches — check middle-name compatibility before
+    // awarding full credit. "William Melvin" vs "William H" and
+    // "Mary Elizabeth" vs "Mary Emma" share first names but disagree
+    // on middles; they should not score as full-exact.
+    if (!middleNameCompatible(individual, candidate)) {
+      return { points: 18, reason: 'given:first-only-middle-conflict' };
+    }
     return { points: 25, reason: 'given:exact' };
   }
   if (indFirst && candFirst && equivalent(indFirst, candFirst)) {
@@ -210,6 +217,26 @@ function scoreCandidate(individual, candidate) {
 
 // ---- Decision --------------------------------------------------------------
 
+// Checks the second given token (the "middle name") for compatibility
+// between the individual and a candidate. Returns true if either side lacks
+// a middle, if they match exactly, if they're nickname-equivalent, or if
+// one is an initial that's the first letter of the other. Returns false on
+// any genuine disagreement (e.g., "Melvin" vs "H", "Elizabeth" vs "Emma").
+function middleNameCompatible(individual, candidate) {
+  const indTokens = givenTokens(normalizeForCompare(individual.given || ''));
+  const candCleaned = cleanCandidateName(candidate.name || '');
+  const candGivenStr = candCleaned.trim().split(/\s+/).slice(0, -1).join(' ');
+  const candTokens = givenTokens(normalizeForCompare(candGivenStr));
+  if (indTokens.length < 2 || candTokens.length < 2) return true;
+  const indMid = indTokens[1].replace(/\.$/, '');
+  const candMid = candTokens[1].replace(/\.$/, '');
+  if (indMid === candMid) return true;
+  if (equivalent(indMid, candMid)) return true;
+  if (indMid.length === 1 && candMid.startsWith(indMid)) return true;
+  if (candMid.length === 1 && indMid.startsWith(candMid)) return true;
+  return false;
+}
+
 function pickBest(individual, candidates) {
   if (!candidates || candidates.length === 0) {
     return { status: 'no_match', candidates: [] };
@@ -232,12 +259,21 @@ function pickBest(individual, candidates) {
   // better match on the four signals we measure. Bypass only fires when
   // the perfect is unique; two simultaneous perfects mean FAG has duplicate
   // memorials, which the user has to disambiguate manually.
+  //
+  // Extra guard: even with a "perfect" score, the GEDCOM and candidate may
+  // disagree on middle name (the matcher only looks at the first given
+  // token). "William Melvin" vs "William H" and "Mary Elizabeth" vs "Mary
+  // Emma" both hit perfect on first-token + surname + dates but should
+  // stay ambiguous. middleNameCompatible enforces that any second given
+  // token agrees exactly, via nickname, or via initial-collapse.
   const isPerfect = (s) =>
     s.components.surname === 30 &&
     s.components.given === 25 &&
     s.components.birth === 20 &&
     s.components.death === 20;
-  const perfects = scored.filter(isPerfect);
+  const perfects = scored.filter(
+    (s) => isPerfect(s) && middleNameCompatible(individual, s.candidate)
+  );
   if (perfects.length === 1) {
     return {
       status: 'resolved',
@@ -263,8 +299,17 @@ function pickBest(individual, candidates) {
   const eitherYearClose = birthClose || deathClose;
   const bothYearsClose = birthClose && deathClose;
 
+  // Middle-name gate: even with high score and big gap, a middle-name
+  // disagreement between GEDCOM and the top candidate is a strong signal
+  // these are different people. Never auto-resolve in that case — let a
+  // human decide. Already applied inside the perfect-signal bypass; this
+  // covers the normal resolve path too.
+  const topMiddleOk = middleNameCompatible(individual, top.candidate);
+
   let resolved = false;
-  if (hasNoYears) {
+  if (!topMiddleOk) {
+    resolved = false;
+  } else if (hasNoYears) {
     resolved = top.score >= 90 && fullSurname && gap >= 20;
   } else if (isCommonSurname) {
     resolved = top.score >= 80 && gap >= 25 && fullSurname && bothYearsClose;

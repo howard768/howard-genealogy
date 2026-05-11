@@ -183,9 +183,41 @@ console.log('\nmatch.js — Fred Charles Howard (perfect-signal bypass)');
   const decision = pickBest(ind, cands);
   // Top scores 95 (every signal maxed); runner-up at 87. Common-surname
   // penalty would otherwise keep him ambiguous. The perfect-signal
-  // bypass must auto-resolve to 254069216.
+  // bypass must auto-resolve to 254069216. "Fred Charles" vs "Fred C"
+  // is initial-collapse compatible.
   assertEq('Fred resolved by perfect-signal bypass', decision.status, 'resolved');
   assertEq('Fred memorial id', decision.memorialId, '254069216');
+}
+
+console.log('\nmatch.js — William Melvin vs William H (middle-name false positive)');
+{
+  // Without the middle-name guard, this candidate would bypass-resolve:
+  // William=William, Howard=Howard, birth ±0, death ±0 → "perfect."
+  // But Melvin ≠ H — must stay ambiguous.
+  const ind = load('william-melvin-howard.json');
+  const cands = load('william-h-candidates.json');
+  const decision = pickBest(ind, cands);
+  assertEq('William Melvin stays ambiguous', decision.status, 'ambiguous');
+}
+
+console.log('\nmatch.js — Mary Elizabeth vs Mary Emma (middle-name false positive)');
+{
+  // Mary Elizabeth Greene vs "Mary Emma Greene": exact first token,
+  // exact surname, exact dates, but Elizabeth ≠ Emma.
+  const ind = load('mary-elizabeth-greene-wilson.json');
+  const cands = [
+    {
+      id: '105183120',
+      name: 'Mary Emma Greene 15 Apr 1858 – 2 Jan 1933',
+      birthYear: 1858,
+      deathYear: 1933,
+      cemetery: null,
+      cemeteryLocation: 'Brooklyn, Kings County, New York, USA',
+      snippetText: 'Mary Emma Greene 1858 1933 Brooklyn New York',
+    },
+  ];
+  const decision = pickBest(ind, cands);
+  assertEq('Mary Elizabeth ≠ Mary Emma stays ambiguous', decision.status, 'ambiguous');
 }
 
 console.log('\nmatch.js — Bill Compston end-to-end (badge + day-number bug)');
