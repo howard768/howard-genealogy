@@ -84,6 +84,21 @@ assertEq(
   cleanCandidateName('John Smith 8 Jan 1900'),
   'John Smith'
 );
+assertEq(
+  'strip Flowers-have-been-left metadata',
+  cleanCandidateName('Fred C Howard Flowers have been left 1922-1984'),
+  'Fred C Howard'
+);
+assertEq(
+  'strip No-grave-photo metadata',
+  cleanCandidateName('Coral M Russell No grave photo 1898-1976'),
+  'Coral M Russell'
+);
+assertEq(
+  'strip Add-a-photo metadata',
+  cleanCandidateName('Some Person Add a photo 1900-1990'),
+  'Some Person'
+);
 
 console.log('\nsearch.js — year extraction (full-date header bug)');
 {
@@ -130,6 +145,16 @@ console.log('\nmatch.js — Hugh Wilson regression');
   const decision = pickBest(ind, cands);
   assertEq('Hugh Wilson resolved', decision.status, 'resolved');
   assertEq('Hugh Wilson memorial id', decision.memorialId, '194480890');
+}
+
+console.log('\nmatch.js — Coral May Russell (initial-letter match flips wrong top)');
+{
+  const ind = load('coral-russell.json');
+  const cands = load('coral-russell-candidates.json');
+  const decision = pickBest(ind, cands);
+  // We don't expect resolved (genuinely ambiguous), but the right
+  // candidate must rank above the wrong one.
+  assertEq('Coral top candidate is C M. Russell', decision.candidates[0].id, '239406509');
 }
 
 console.log('\nmatch.js — Bill Compston end-to-end (badge + day-number bug)');

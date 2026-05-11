@@ -1,0 +1,17 @@
+{
+  "xref": "@I0099@",
+  "given": "Coral May",
+  "surname": "Russell",
+  "surnameAlt": [],
+  "sex": "F",
+  "birth": {
+    "year": 1898,
+    "dateRaw": "9 May 1898",
+    "place": { "city": "Tarpon Springs", "region": "Florida", "country": "USA", "raw": "Tarpon Springs, Pinellas, Florida, USA" }
+  },
+  "death": {
+    "year": 1977,
+    "dateRaw": "29 Nov 1977",
+    "place": { "city": "Tarpon Springs", "region": "Florida", "country": "USA", "raw": "Tarpon Springs, Pinellas, Florida, USA" }
+  }
+}

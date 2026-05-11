@@ -55,9 +55,16 @@ function extractCandidateGiven(fullName) {
 // per-token walk for day-number, month-then-digit, and comma stops.
 const MONTH_RE = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?$/i;
 const BADGE_RE = /(V?Veteran|Famous|Memorial|Cenotaph)\b/i;
+// FAG search cards interleave call-to-action snippets between the name and
+// the dates: "Flowers have been left", "No grave photo", "Add a photo",
+// "Memorial added", "Records on Ancestry", etc. Match the first word of
+// each phrase so the cleaner cuts before any of them.
+const META_PHRASE = /\b(flowers?\s+have|photos?\s+have|add(?:\s+a)?\s+photo|no\s+grave|memorial\s+added|records?\s+on\s+ancestry)\b/i;
 function cleanCandidateName(fullName) {
   if (!fullName) return '';
   let s = String(fullName);
+  const meta = s.match(META_PHRASE);
+  if (meta) s = s.slice(0, meta.index);
   const badge = s.match(BADGE_RE);
   if (badge) s = s.slice(0, badge.index);
   const yearAt = s.match(/\b\d{4}\b/);
@@ -113,6 +120,19 @@ function scoreGiven(individual, candidate) {
   }
   if (indFirst && candFirst && indFirst.length >= 4 && levenshtein(indFirst, candFirst) <= 2) {
     return { points: 18, reason: 'given:lev<=2' };
+  }
+  // Initial-only candidate (FAG memorials often record "C M. Russell"
+  // instead of "Coral May Russell"). If the candidate's first token is a
+  // single letter (with optional period) and matches the individual's
+  // first-letter, give a partial — much weaker than exact since "C"
+  // could be many names, but enough to beat a wrong-name candidate.
+  const candFirstStripped = candFirst.replace(/\.$/, '');
+  if (
+    indFirst &&
+    candFirstStripped.length === 1 &&
+    indFirst[0] === candFirstStripped
+  ) {
+    return { points: 12, reason: 'given:initial' };
   }
   return { points: 0, reason: null };
 }
