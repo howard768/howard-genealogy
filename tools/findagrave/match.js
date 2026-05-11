@@ -55,16 +55,20 @@ function extractCandidateGiven(fullName) {
 // per-token walk for day-number, month-then-digit, and comma stops.
 const MONTH_RE = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?$/i;
 const BADGE_RE = /(V?Veteran|Famous|Memorial|Cenotaph)\b/i;
-// FAG search cards interleave call-to-action snippets between the name and
-// the dates: "Flowers have been left", "No grave photo", "Add a photo",
-// "Memorial added", "Records on Ancestry", etc. Match the first word of
-// each phrase so the cleaner cuts before any of them.
-const META_PHRASE = /\b(flowers?\s+have|photos?\s+have|add(?:\s+a)?\s+photo|no\s+grave|memorial\s+added|records?\s+on\s+ancestry)\b/i;
+// FAG search cards interleave call-to-action snippets with the name and
+// dates: "Flowers have been left", "No grave photo", "Add a photo", etc.
+// Sometimes the snippet appears BEFORE the name ("No grave photo C M.
+// Russell ..."), so we strip every occurrence in-place rather than cut at
+// the first match. Match the full phrase so all of it disappears.
+const META_PHRASE_G = /\b(?:flowers?\s+have\s+been(?:\s+\w+\.?)?|photos?\s+have\s+been(?:\s+\w+\.?)?|no\s+grave\s+photo|add(?:\s+a)?\s+photo|memorial\s+added|records?\s+on\s+ancestry)\b\.?/gi;
+const PUNCT_TOKEN_RE = /^[.,;:!?•·]+$/;
 function cleanCandidateName(fullName) {
   if (!fullName) return '';
-  let s = String(fullName);
-  const meta = s.match(META_PHRASE);
-  if (meta) s = s.slice(0, meta.index);
+  let s = String(fullName)
+    .replace(META_PHRASE_G, ' ')
+    .replace(/[•·]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const badge = s.match(BADGE_RE);
   if (badge) s = s.slice(0, badge.index);
   const yearAt = s.match(/\b\d{4}\b/);
@@ -74,6 +78,7 @@ function cleanCandidateName(fullName) {
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
     if (/^\d+$/.test(t)) break;
+    if (PUNCT_TOKEN_RE.test(t)) continue;
     // Month token: stop if followed by a digit OR if it's the last token
     // (year was already cut, so a trailing month is leftover date prefix).
     if (MONTH_RE.test(t) && (i + 1 >= tokens.length || /^\d/.test(tokens[i + 1]))) break;
@@ -219,6 +224,30 @@ function pickBest(individual, candidates) {
   const top = scored[0];
   const second = scored[1] || { score: 0 };
   const gap = top.score - second.score;
+
+  // Perfect-signal bypass: if exactly one candidate scores the maximum on
+  // every measurable signal (surname 30 + given 25 + birth ±0 + death ±0),
+  // it auto-resolves regardless of gap or the common-surname penalty.
+  // The runner-up's score doesn't matter — no other candidate can be a
+  // better match on the four signals we measure. Bypass only fires when
+  // the perfect is unique; two simultaneous perfects mean FAG has duplicate
+  // memorials, which the user has to disambiguate manually.
+  const isPerfect = (s) =>
+    s.components.surname === 30 &&
+    s.components.given === 25 &&
+    s.components.birth === 20 &&
+    s.components.death === 20;
+  const perfects = scored.filter(isPerfect);
+  if (perfects.length === 1) {
+    return {
+      status: 'resolved',
+      memorialId: String(perfects[0].candidate.id),
+      score: perfects[0].score,
+      gap,
+      reasons: [...perfects[0].reasons, 'perfect-signal-bypass'],
+      candidates: scored.slice(0, 5).map(serialize),
+    };
+  }
 
   const surnameLower = (individual.surname || '').toLowerCase();
   const isCommonSurname = COMMON_SURNAMES.has(surnameLower);

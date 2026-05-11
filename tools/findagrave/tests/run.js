@@ -147,14 +147,45 @@ console.log('\nmatch.js — Hugh Wilson regression');
   assertEq('Hugh Wilson memorial id', decision.memorialId, '194480890');
 }
 
-console.log('\nmatch.js — Coral May Russell (initial-letter match flips wrong top)');
+console.log('\nmatch.js — Coral May Russell (metadata at start of name)');
 {
   const ind = load('coral-russell.json');
-  const cands = load('coral-russell-candidates.json');
+  // Use a candidate where "No grave photo" appears BEFORE the name —
+  // mirrors the actual FAG card text the Mac re-rescore exposed.
+  const cands = [
+    {
+      id: '239406509',
+      name: 'No grave photo C M. Russell Flowers have been left. • No grave photo 9 May 1898 – 29 Nov 1976',
+      birthYear: 1898,
+      deathYear: 1976,
+      cemetery: null,
+      cemeteryLocation: 'Tarpon Springs, Pinellas, Florida, USA',
+      snippetText: 'C M. Russell Tarpon Springs Florida',
+    },
+    {
+      id: '74905861',
+      name: 'C Jack Russell 1900 – 1976',
+      birthYear: 1900,
+      deathYear: 1976,
+      cemetery: 'Cycadia Cemetery',
+      cemeteryLocation: 'Tarpon Springs, Pinellas, Florida, USA',
+      snippetText: 'C Jack Russell 1900 1976 Cycadia Cemetery Tarpon Springs',
+    },
+  ];
   const decision = pickBest(ind, cands);
-  // We don't expect resolved (genuinely ambiguous), but the right
-  // candidate must rank above the wrong one.
   assertEq('Coral top candidate is C M. Russell', decision.candidates[0].id, '239406509');
+}
+
+console.log('\nmatch.js — Fred Charles Howard (perfect-signal bypass)');
+{
+  const ind = load('fred-howard.json');
+  const cands = load('fred-howard-candidates.json');
+  const decision = pickBest(ind, cands);
+  // Top scores 95 (every signal maxed); runner-up at 87. Common-surname
+  // penalty would otherwise keep him ambiguous. The perfect-signal
+  // bypass must auto-resolve to 254069216.
+  assertEq('Fred resolved by perfect-signal bypass', decision.status, 'resolved');
+  assertEq('Fred memorial id', decision.memorialId, '254069216');
 }
 
 console.log('\nmatch.js — Bill Compston end-to-end (badge + day-number bug)');

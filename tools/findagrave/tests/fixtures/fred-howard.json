@@ -1,0 +1,17 @@
+{
+  "xref": "@I0077@",
+  "given": "Fred Charles",
+  "surname": "Howard",
+  "surnameAlt": [],
+  "sex": "M",
+  "birth": {
+    "year": 1922,
+    "dateRaw": "1922",
+    "place": { "city": "Tarpon Springs", "region": "Florida", "country": "USA", "raw": "Tarpon Springs, Pinellas, Florida, USA" }
+  },
+  "death": {
+    "year": 1984,
+    "dateRaw": "1984",
+    "place": { "city": "Tarpon Springs", "region": "Florida", "country": "USA", "raw": "Tarpon Springs, Pinellas, Florida, USA" }
+  }
+}
